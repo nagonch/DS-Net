@@ -5,7 +5,7 @@
 
 import time
 import numpy as np
-import spconv
+import spconv.pytorch as spconv
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -63,21 +63,21 @@ class ResContextBlock(nn.Module):
 
     def forward(self, x):
         shortcut = self.conv1(x)
-        shortcut.features = self.act1(shortcut.features)
-        shortcut.features = self.bn0(shortcut.features)
+        shortcut = shortcut.replace_feature(self.act1(shortcut.features))
+        shortcut = shortcut.replace_feature(self.bn0(shortcut.features))
 
         shortcut = self.conv1_2(shortcut)
-        shortcut.features = self.act1_2(shortcut.features)
-        shortcut.features = self.bn0_2(shortcut.features)
+        shortcut= shortcut.replace_feature(self.act1_2(shortcut.features))
+        shortcut= shortcut.replace_feature(self.bn0_2(shortcut.features))
 
         resA = self.conv2(x)
-        resA.features = self.act2(resA.features)
-        resA.features = self.bn1(resA.features)
+        resA = resA.replace_feature(self.act2(resA.features))
+        resA = resA.replace_feature(self.bn1(resA.features))
 
         resA = self.conv3(resA)
-        resA.features = self.act3(resA.features)
-        resA.features = self.bn2(resA.features)
-        resA.features = resA.features + shortcut.features
+        resA = resA.replace_feature(self.act3(resA.features))
+        resA = resA.replace_feature(self.bn2(resA.features))
+        resA = resA.replace_feature(resA.features + shortcut.features)
 
         return resA
 
@@ -123,26 +123,26 @@ class ResBlock(nn.Module):
 
     def forward(self, x):
         shortcut = self.conv1(x)
-        shortcut.features = self.act1(shortcut.features)
-        shortcut.features = self.bn0(shortcut.features)
+        shortcut = shortcut.replace_feature(self.act1(shortcut.features))
+        shortcut = shortcut.replace_feature(self.bn0(shortcut.features))
 
         shortcut = self.conv1_2(shortcut)
-        shortcut.features = self.act1_2(shortcut.features)
-        shortcut.features = self.bn0_2(shortcut.features)
+        shortcut = shortcut.replace_feature(self.act1_2(shortcut.features))
+        shortcut = shortcut.replace_feature(self.bn0_2(shortcut.features))
 
         resA = self.conv2(x)
-        resA.features = self.act2(resA.features)
-        resA.features = self.bn1(resA.features)
+        resA = resA.replace_feature(self.act2(resA.features))
+        resA= resA.replace_feature(self.bn1(resA.features))
 
         resA = self.conv3(resA)
-        resA.features = self.act3(resA.features)
-        resA.features = self.bn2(resA.features)
+        resA = resA.replace_feature(self.act3(resA.features))
+        resA = resA.replace_feature(self.bn2(resA.features))
 
-        resA.features = resA.features + shortcut.features
+        resA = resA.replace_feature(resA.features + shortcut.features)
 
         # resA = self.conv4(resA)
-        # resA.features = self.act4(resA.features)
-        # resA.features = self.bn4(resA.features)
+        # resA = resA.replace_feature(self.act4(resA.features))
+        # resA = resA.replace_feature(self.bn4(resA.features))
 
 
         if self.pooling:
@@ -192,8 +192,8 @@ class UpBlock(nn.Module):
         upA = self.trans_dilao(x)
         #if upA.shape != skip.shape:
         #    upA = F.pad(upA, (0, 1, 0, 1), mode='replicate')
-        upA.features = self.trans_act(upA.features)
-        upA.features = self.trans_bn(upA.features)
+        upA = upA.replace_feature(self.trans_act(upA.features))
+        upA = upA.replace_feature(self.trans_bn(upA.features))
 
 
 
@@ -203,25 +203,25 @@ class UpBlock(nn.Module):
 
         # if self.drop_out:
         #     upA = self.dropout1(upA)
-        upA.features = upA.features + skip.features
+        upA = upA.replace_feature(upA.features + skip.features)
         # if self.drop_out:
         #     upB = self.dropout2(upB)
 
         upE = self.conv1(upA)
-        upE.features = self.act1(upE.features)
-        upE.features = self.bn1(upE.features)
+        upE = upA.replace_feature(self.act1(upE.features))
+        upE = upA.replace_feature(self.bn1(upE.features))
 
 
 
         upE = self.conv2(upE)
-        upE.features = self.act2(upE.features)
-        upE.features = self.bn2(upE.features)
+        upE = upA.replace_feature(self.act2(upE.features))
+        upE = upA.replace_feature(self.bn2(upE.features))
 
 
 
         upE = self.conv3(upE)
-        upE.features = self.act3(upE.features)
-        upE.features = self.bn3(upE.features)
+        upE = upA.replace_feature(self.act3(upE.features))
+        upE = upA.replace_feature(self.bn3(upE.features))
 
 
         # if self.drop_out:
@@ -255,30 +255,30 @@ class ReconBlock(nn.Module):
 
     def forward(self, x):
         shortcut = self.conv1(x)
-        shortcut.features = self.bn0(shortcut.features)
-        shortcut.features = self.act1(shortcut.features)
+        shortcut= shortcut.replace_feature(self.bn0(shortcut.features))
+        shortcut= shortcut.replace_feature(self.act1(shortcut.features))
 
 
         shortcut2 = self.conv1_2(x)
-        shortcut2.features = self.bn0_2(shortcut2.features)
-        shortcut2.features = self.act1_2(shortcut2.features)
+        shortcut2 = shortcut.replace_feature(self.bn0_2(shortcut2.features))
+        shortcut2 = shortcut.replace_feature(self.act1_2(shortcut2.features))
 
 
         shortcut3 = self.conv1_3(x)
-        shortcut3.features = self.bn0_3(shortcut3.features)
-        shortcut3.features = self.act1_3(shortcut3.features)
+        shortcut3 = shortcut.replace_feature(self.bn0_3(shortcut3.features))
+        shortcut3 = shortcut.replace_feature(self.act1_3(shortcut3.features))
 
 
         # resA = self.conv2(x)
-        # resA.features = self.act2(resA.features)
-        # resA.features = self.bn1(resA.features)
+        # resA= shortcut.replace_feature(self.act2(resA.features))
+        # resA= shortcut.replace_feature(self.bn1(resA.features))
         #
         # resA = self.conv3(resA)
-        # resA.features = self.act3(resA.features)
-        # resA.features = self.bn2(resA.features)
-        shortcut.features = shortcut.features + shortcut2.features + shortcut3.features
+        # resA= shortcut.replace_feature(self.act3(resA.features))
+        # resA= shortcut.replace_feature(self.bn2(resA.features))
+        shortcut = shortcut.replace_feature(shortcut.features + shortcut2.features + shortcut3.features)
 
-        shortcut.features = shortcut.features * x.features
+        shortcut = shortcut.replace_feature(shortcut.features * x.features)
 
         return shortcut
 
@@ -345,7 +345,7 @@ class Spconv_salsaNet_res_cfg(nn.Module):
 
         up0e = self.ReconNet(up1e)
 
-        up0e.features = torch.cat((up0e.features, up1e.features), 1)
+        up0e = up0e.replace_feature(torch.cat((up0e.features, up1e.features), 1))
 
         return up0e, up0e
 
@@ -394,11 +394,11 @@ class Spconv_ins_offset_concatxyz_threelayers_head_cfg(nn.Module):
 
     def forward(self, fea, batch):
         fea = self.conv1(fea)
-        fea.features = self.act1(self.bn1(fea.features))
+        fea = fea.replace_feature(self.act1(self.bn1(fea.features)))
         fea = self.conv2(fea)
-        fea.features = self.act2(self.bn2(fea.features))
+        fea = fea.replace_feature(self.act2(self.bn2(fea.features)))
         fea = self.conv3(fea)
-        fea.features = self.act3(self.bn3(fea.features))
+        fea = fea.replace_feature(self.act3(self.bn3(fea.features)))
 
         grid_ind = batch['grid']
         xyz = batch['pt_cart_xyz']
@@ -474,7 +474,7 @@ class Spconv_alsaNet_res(nn.Module):
 
         up0e = self.ReconNet(up1e)
 
-        up0e.features = torch.cat((up0e.features, up1e.features), 1)
+        up0e = up0e.replace_feature(torch.cat((up0e.features, up1e.features), 1))
 
         # up2e = self.upBlock3(up3e, down2b)
         # up1e = self.upBlock4(up2e, down1b)
