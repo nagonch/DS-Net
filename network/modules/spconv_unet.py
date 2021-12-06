@@ -33,7 +33,7 @@ def conv3x1x1(in_planes, out_planes, stride=1, indice_key=None):
 
 
 def conv3x1(in_planes, out_planes, stride=1, indice_key=None):
-    return spconv.SubMConv3d(in_planes, out_planes, kernel_size=(3, 1, 3), stride=stride,
+    return spconv.SubMConv3d(in_planes, out_planes, kernel_size=(1, 3, 3), stride=stride,
                      padding=(1, 0, 1), bias=False, indice_key=indice_key)
 
 def conv1x1(in_planes, out_planes, stride=1, indice_key=None):
@@ -65,8 +65,9 @@ class ResContextBlock(nn.Module):
         shortcut = self.conv1(x)
         shortcut = shortcut.replace_feature(self.act1(shortcut.features))
         shortcut = shortcut.replace_feature(self.bn0(shortcut.features))
-
+        print("SHAPE: ", shortcut.features.shape)
         shortcut = self.conv1_2(shortcut)
+        print("YES!! SHAPE: ", shortcut.features.shape)
         shortcut= shortcut.replace_feature(self.act1_2(shortcut.features))
         shortcut= shortcut.replace_feature(self.bn0_2(shortcut.features))
 
